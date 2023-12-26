@@ -1,0 +1,26 @@
+# 使用官方 PHP 7.4 镜像作为基础镜像
+FROM php:7.4-fpm
+
+# 安装所需的 PHP 扩展、Composer 和其他扩展，并清理缓存
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y libpng-dev libjpeg-dev libpq-dev libzip-dev unzip; \
+    docker-php-ext-configure gd --with-jpeg; \
+    docker-php-ext-configure zip; \
+    docker-php-ext-install -j "$(nproc)" gd pdo pdo_mysql zip opcache; \
+    pecl install imagick && echo "extension=imagick.so" >> /usr/local/etc/php/php.ini; \
+    pecl install redis && echo "extension=redis.so" >> /usr/local/etc/php/php.ini; \
+    pecl install swoole && echo "extension=swoole.so" >> /usr/local/etc/php/php.ini; \
+    pecl install protobuf && echo "extension=protobuf.so" >> /usr/local/etc/php/php.ini; \
+    pecl install apcu && echo "extension=apcu.so" >> /usr/local/etc/php/php.ini; \
+    pecl install grpc && echo "extension=grpc.so" >> /usr/local/etc/php/php.ini; \
+    curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* /var/cache/*;
+
+# 设置工作目录
+WORKDIR /var/www
+
+# 设置容器启动时执行的脚本
+CMD ["php-fpm"]
+

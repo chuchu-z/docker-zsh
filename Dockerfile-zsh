@@ -1,0 +1,50 @@
+# 使用一个基础镜像
+FROM ubuntu:latest
+
+# 设置终端为非交互模式
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 设置工作目录
+WORKDIR /root
+
+# 设置 utf8 编码
+ENV LANG="zh_CN.UTF-8"
+ENV LANGUAGE="zh_CN:zh"
+ENV LC_ALL="zh_CN.UTF-8"
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+
+# 复制别名定义脚本和启动脚本到容器中
+COPY setup_aliases.sh /usr/local/bin/
+
+# 设置 Git 用户名和邮箱为 Docker 构建参数的默认值
+ARG GIT_USERNAME="chuchu-z"
+ARG GIT_EMAIL="chuchuzz426@gmail.com"
+
+# 更新软件包源并安装必要的工具和 Zsh
+RUN apt-get update && \
+    apt-get install -y python3 tzdata vim zsh curl git locales autojump && \
+    git config --global user.name "$GIT_USERNAME" && git config --global user.email "$GIT_EMAIL" && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    locale-gen zh_CN.UTF-8 && \
+    # 安装 Oh My Zsh
+    sh -c "$(curl -fsSL https://gitee.com/mirrors/oh-my-zsh/raw/master/tools/install.sh)" && \
+    chmod +x /usr/local/bin/setup_aliases.sh && /usr/local/bin/setup_aliases.sh && \
+    # 设置agnoster主题
+    sed -i 's/ZSH_THEME="robbyrussell"/ZSH_THEME="agnoster"/' ~/.zshrc && \
+    # 安装 zsh-autosuggestions 插件
+    git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions && \
+    # 安装 zsh-syntax-highlighting 插件
+    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting && \
+    # 将 zsh-autosuggestions 和 zsh-syntax-highlighting 插件添加到插件列表
+    sed -i '/^plugins=(/ s/)/ zsh-autosuggestions zsh-syntax-highlighting)/' ~/.zshrc && \
+    # 清除不需要的软件包和中间文件
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* && \
+    # 将 Zsh 设置为默认 shell
+    chsh -s /usr/bin/zsh
+
+# 启动 Zsh 终端作为默认命令
+CMD [ "zsh" ]
+

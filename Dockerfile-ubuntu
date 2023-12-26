@@ -1,0 +1,25 @@
+# 首先，构建基础镜像并安装所需工具
+FROM ubuntu:latest AS builder
+
+RUN apt-get update && apt-get install -y zsh curl wget git
+
+# 创建非特权用户
+RUN useradd -ms /bin/zsh developer
+USER developer
+WORKDIR /home/developer
+
+# 下载并安装 Oh My Zsh
+RUN sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+# 使用一个干净的镜像作为最终镜像
+FROM ubuntu:latest
+
+# 将 builder 阶段的内容复制到最终镜像中
+COPY --from=builder / /
+
+# 设置 zsh 作为默认 shell
+SHELL ["zsh"]
+
+# 启动 zsh 终端
+CMD ["zsh"]
+

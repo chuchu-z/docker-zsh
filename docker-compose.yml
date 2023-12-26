@@ -1,0 +1,42 @@
+version: '3'
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
+    container_name: nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /d/phpstudy/WWW:/usr/share/nginx/html
+    depends_on:
+      - php
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    container_name: php
+    volumes:
+      - /d/phpstudy/WWW:/var/www
+  zsh:
+    build:
+      context: .
+      dockerfile: Dockerfile-zsh
+    environment:
+      SHELL: /bin/zsh
+    command: ["tail", "-f", "/dev/null"]  # 保持容器运行状态
+    container_name: zsh
+    volumes:
+      - /d/phpstudy/WWW:/var/www
+      - /d/phpstudy/WWW/docker/.ssh:/root/.ssh
+  # mysql:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile-mysql
+  #   environment:
+  #     MYSQL_ROOT_PASSWORD: root
+  #   container_name: mysql
+  #   ports:
+  #     - "3306:3306"
+

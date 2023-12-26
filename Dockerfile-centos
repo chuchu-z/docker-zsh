@@ -1,0 +1,31 @@
+# 使用官方 CentOS 7 镜像作为基础镜像
+FROM centos:7
+
+# 设置工作目录
+WORKDIR /root
+
+# 设置 utf8 编码
+ENV LANG="en_US.utf8"
+
+# 设置时区
+ENV TZ=Asia/Shanghai
+
+# 复制别名定义脚本和启动脚本到容器中
+COPY setup_aliases.sh /usr/local/bin/
+
+# 设置 Git 用户名和邮箱为 Docker 构建参数的默认值
+ARG GIT_USERNAME="chuchu-z"
+ARG GIT_EMAIL="chuchuzz426@gmail.com"
+
+# 更新软件包并安装必要的工具
+RUN yum update -y && yum install -y vim wget curl nano git openssh-clients zsh && yum clean all && \
+    git config --global user.name "$GIT_USERNAME" && git config --global user.email "$GIT_EMAIL" && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" && \
+    chmod +x /usr/local/bin/setup_aliases.sh && /usr/local/bin/setup_aliases.sh
+
+# 设置 Zsh 作为默认 Shell
+SHELL ["/bin/zsh"]
+
+# 设置容器启动时执行的脚本
+CMD ["/bin/zsh"]
